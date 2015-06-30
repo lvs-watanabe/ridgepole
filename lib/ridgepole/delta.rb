@@ -27,6 +27,11 @@ class Ridgepole::Delta
       append_create_table(table_name, attrs, buf)
     end
 
+    # foreign_keyだけcreateの後に全実施するように変更
+    (@delta[:add] || {}).each do |table_name, attrs|
+      append_foreign_key(table_name, attrs, buf)
+    end
+
     (@delta[:rename] || {}).each do |table_name, attrs|
       append_rename_table(table_name, attrs, buf)
     end
@@ -224,11 +229,6 @@ end
       end
     end
 
-    unless (foreign_keys = attrs[:foreign_keys] || {}).empty?
-      foreign_keys.each do |foreign_key_name, foreign_key_attrs|
-        append_add_foreign_key(table_name, foreign_key_name, foreign_key_attrs, buf, @options)
-      end
-    end
 
     buf.puts
   end
@@ -395,6 +395,15 @@ remove_index(#{table_name.inspect}, #{target.inspect})
 
     (delta[:add] || {}).each do |foreign_key_name, attrs|
       append_add_foreign_key(table_name, foreign_key_name, attrs, buf, options)
+    end
+  end
+
+  # foreign_keyだけcreateの後に全実施するように変更
+  def append_foreign_key(table_name, attrs, buf)
+    unless (foreign_keys = attrs[:foreign_keys] || {}).empty?
+      foreign_keys.each do |foreign_key_name, foreign_key_attrs|
+        append_add_foreign_key(table_name, foreign_key_name, foreign_key_attrs, buf, @options)
+      end
     end
   end
 
